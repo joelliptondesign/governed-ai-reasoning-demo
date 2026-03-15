@@ -1,3 +1,9 @@
+# MED-SCRIBE
+
+**Governed AI reasoning pipeline demonstrating how probabilistic LLM outputs can be evaluated, constrained, and converted into deterministic system decisions.**
+
+This repository illustrates a production-style architecture for embedding LLM reasoning inside governed system boundaries using structured pipelines, critic evaluation, and policy arbitration.
+
 MED-SCRIBE
 Governed AI Workflow Demo for Clinical Intake Reasoning
 
