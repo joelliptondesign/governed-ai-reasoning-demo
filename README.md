@@ -29,6 +29,41 @@ final_formatter
 
 See docs/architecture.md for the visual pipeline diagram.
 
+Design Principles
+
+This demo was built around a small set of architectural constraints designed to make AI reasoning systems safer and more observable.
+
+1. Structured reasoning pipelines
+
+LLM outputs are not treated as final decisions.
+Each stage of reasoning is separated into explicit nodes with typed outputs.
+
+2. Deterministic governance layer
+
+Probabilistic outputs from the critic are evaluated by a deterministic policy engine.
+Final system decisions are produced only after governance rules are applied.
+
+3. Explicit decision artifacts
+
+Each run produces a structured artifact containing:
+
+• reasoning outputs
+• critic evaluation results
+• governance policy outcomes
+• final decision state
+
+This allows decisions to be inspected, audited, and replayed.
+
+4. Separation of reasoning and arbitration
+
+The system distinguishes between:
+
+• reasoning nodes (LLM or heuristic)
+• evaluation nodes (critic scoring)
+• governance nodes (policy enforcement)
+
+This separation prevents the LLM from acting as the final authority.
+
 Key design elements:
 
 • structured reasoning pipeline
