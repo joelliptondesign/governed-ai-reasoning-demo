@@ -1,136 +1,230 @@
-# MED-SCRIBE
+# MED-SCRIBE — Governed Diagnostic Evaluation System
 
-**Governed AI reasoning pipeline demonstrating how probabilistic LLM outputs can be evaluated, constrained, and converted into deterministic system decisions.**
+## Thesis
 
-This repository illustrates a production-style architecture for embedding LLM reasoning inside governed system boundaries using structured pipelines, critic evaluation, and policy arbitration.
+AI reliability is not a model problem — it is a system design problem.
 
-MED-SCRIBE
-Governed AI Workflow Demo for Clinical Intake Reasoning
+This project demonstrates how a probabilistic reasoning system can be transformed into a measurable, governable, and auditable decision system through structured evaluation and deterministic policy enforcement.
 
-OVERVIEW
+---
 
-This project demonstrates a governed AI reasoning pipeline built with LangGraph.
+## Why This Exists
 
-The system simulates a clinical intake workflow where structured reasoning is combined with deterministic policy enforcement.
+Most AI systems appear to work because their outputs look plausible.
 
-The goal is to show how probabilistic AI outputs can be evaluated and governed before producing a final decision.
+They fail when:
 
-ARCHITECTURE
+• outputs are ambiguous  
+• reasoning is inconsistent  
+• confidence is unjustified  
 
-The pipeline follows this sequence:
+This project builds a system that:
 
-intake_parser
-↓
-triage_engine
-↓
-diagnosis_engine
-↓
-icd_mapper
-↓
-critic
-↓
-governance_policy
-↓
-final_formatter
+• measures those failures  
+• enforces constraints  
+• routes uncertainty explicitly  
 
-See docs/architecture.md for the visual pipeline diagram.
+---
 
-Design Principles
+## What This System Does
 
-This demo was built around a small set of architectural constraints designed to make AI reasoning systems safer and more observable.
+Given a clinical-style input, the system:
 
-1. Structured reasoning pipelines
+1. Generates structured diagnostic reasoning  
+2. Produces ICD mappings  
+3. Scores output quality across multiple dimensions  
+4. Applies deterministic governance  
+5. Produces a final decision:
 
-LLM outputs are not treated as final decisions.
-Each stage of reasoning is separated into explicit nodes with typed outputs.
+• PASS → high-confidence, consistent output  
+• REVISE → structured but ambiguous / incomplete  
+• FAIL → invalid or contradictory  
 
-2. Deterministic governance layer
+---
 
-Probabilistic outputs from the critic are evaluated by a deterministic policy engine.
-Final system decisions are produced only after governance rules are applied.
+## Architecture Overview
 
-3. Explicit decision artifacts
+Pipeline:
 
-Each run produces a structured artifact containing:
+Input → Parser → Diagnosis Engine → ICD Mapper → Critic → Policy → Final Decision
 
-• reasoning outputs
-• critic evaluation results
-• governance policy outcomes
-• final decision state
+Key components:
 
-This allows decisions to be inspected, audited, and analyzed, and provides the foundation for replayable execution.
+• LLM reasoning layer → generates candidate outputs  
+• Critic layer → scores output across multiple dimensions  
+• Policy layer → deterministically maps scores → decision  
+• Evaluation layer → measures system behavior across scenarios  
 
-4. Separation of reasoning and arbitration
+---
 
-The system distinguishes between:
+## Governance Model
 
-• reasoning nodes (LLM or heuristic)
-• evaluation nodes (critic scoring)
-• governance nodes (policy enforcement)
+The system enforces:
 
-This separation prevents the LLM from acting as the final authority.
+PASS     → high confidence + full consistency  
+REVISE   → ambiguity or partial completeness  
+FAIL     → contradiction, invalid structure, or low evidence  
 
-Key design elements:
+Governance ensures:
 
-• structured reasoning pipeline
-• critic-mediated evaluation
-• deterministic governance layer
-• policy-based arbitration
-• traceable decision artifacts
+• no silent failures  
+• no unjustified confidence  
+• explicit escalation of uncertainty  
 
-RUNNING THE DEMO
+---
 
-Create a virtual environment and install dependencies.
+## Evaluation Design
 
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+Dataset:
 
-Then run the demo:
+• 15 cases  
+• balanced across:
+  - valid (PASS)
+  - ambiguous (REVISE)
+  - invalid (FAIL)
 
-python app.py
+Evaluation measures:
 
-You can optionally provide an input phrase:
+• behavior_accuracy  
+• pass / revise / fail distribution  
+• governance impact  
+• score distributions  
 
-python app.py "Patient with fever and cough"
+---
 
-EXAMPLE OUTPUT
+## Results (Final System)
 
-A governed example artifact is provided:
+| Metric | Value |
+|---|---:|
+| PASS rate | 0.33 |
+| REVISE rate | 0.47 |
+| FAIL rate | 0.13 |
+| Behavior Accuracy | 0.80 |
+| Average Score | ~5.9 |
+| Incorrect PASS cases | 0 |
 
-examples/governed_eval_example.json
+---
 
-This artifact illustrates:
+## System Evolution
 
-• critic evaluation scores
-• governance rule application
-• final decision outcome
+The system was developed through four stages:
 
-PROJECT STRUCTURE
+1. Baseline  
+   • pipeline runs, but outputs are unvalidated
 
-app.py — single-run demo entrypoint
+2. Governance  
+   • system enforces correctness  
+   • initially over-constrained (100% FAIL)
 
-graph/ — LangGraph pipeline construction and node logic
+3. Calibration + Precision  
+   • PASS emerges  
+   • scoring aligns with real output quality
 
-governance/ — policy rules and deterministic arbitration
+4. Robustness Layer  
+   • ambiguity handled explicitly  
+   • FAIL reduced  
+   • accuracy increased
 
-schemas/ — structured node output contracts
+---
 
-data/ — ICD reference dataset
+## Example Decision Behavior
 
-examples/ — canonical governed output artifact
+• Clean, consistent case → PASS  
+• Ambiguous symptom pattern → REVISE  
+• Contradictory / invalid input → FAIL  
 
-tests/ — deterministic validation tests
+---
 
-NOTES
+## What This Proves
 
-This repository focuses on demonstrating a governed reasoning workflow architecture.
+This system demonstrates:
 
-This repository is intentionally scoped to the primary governed workflow demo surface.
+• AI outputs must be measured, not assumed correct  
+• governance can enforce reliability  
+• structured evaluation enables systematic improvement  
+• ambiguity can be handled without collapsing into failure  
 
-Validation
+---
 
-With this repository state:
+## Repo Structure
 
-• python app.py runs successfully
-• pytest passes (3 tests)
+evaluation/
+  dataset.json
+  eval_runner.py
+  score_runner.py
+  aggregate_runner.py
+  raw_results.json
+  scored_results.json
+  eval_summary.json
+
+pipeline/
+  intake_parser.py
+  diagnosis_engine.py
+  icd_mapper.py
+  critic.py
+
+telemetry/
+  executor_heartbeat.jsonl
+
+---
+
+## How to Run
+
+python evaluation/eval_runner.py
+python evaluation/score_runner.py
+python evaluation/aggregate_runner.py
+
+Outputs:
+
+• evaluation/raw_results.json  
+• evaluation/scored_results.json  
+• evaluation/eval_summary.json  
+
+---
+
+## Limitations
+
+• Not a clinical system  
+• Does not claim medical accuracy  
+• Small dataset (designed for behavior testing, not benchmarking)  
+
+---
+
+## Key Insight
+
+The goal is not to make AI smarter.
+
+The goal is to make AI:
+
+• observable  
+• controllable  
+• accountable  
+
+---
+
+## Author Note
+
+This project focuses on system design, not model training.
+
+It demonstrates how to turn a generative model into a governed decision system with measurable behavior.
+
+---
+
+## What Makes This Different
+
+This is not a prompt engineering demo or a model showcase.
+
+This system introduces a governed architecture around a probabilistic model:
+
+• outputs are scored across multiple dimensions  
+• decisions are enforced deterministically  
+• ambiguity is explicitly handled (REVISE instead of silent failure)  
+• invalid outputs are rejected  
+
+The focus is on:
+
+• measurement over intuition  
+• system behavior over single outputs  
+• reliability through design, not model tuning  
+
+This demonstrates how AI systems can be made observable, controllable, and accountable.
