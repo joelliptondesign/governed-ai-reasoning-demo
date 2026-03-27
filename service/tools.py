@@ -1,4 +1,4 @@
-"""Static service tool dispatcher over existing pipeline nodes."""
+"""Static node dispatch utilities for evaluation pipeline."""
 
 from __future__ import annotations
 

@@ -1,3 +1,11 @@
+"""Primary entry point for offline evaluation pipeline.
+
+Flow:
+dataset -> graph execution -> raw_results.json
+
+This is the canonical starting point for running evaluations.
+"""
+
 import json
 import sys
 from pathlib import Path
@@ -16,8 +24,6 @@ if str(REPO_ROOT) not in sys.path:
 if VENV_SITE_PACKAGES.exists() and str(VENV_SITE_PACKAGES) not in sys.path:
     sys.path.insert(0, str(VENV_SITE_PACKAGES))
 
-# === PIPELINE IMPORT (ADJUST IF NEEDED) ===
-# Replace with actual pipeline entry point if necessary
 try:
     from graph.state import initial_state, load_schema
     from graph.graph_builder import build_graph

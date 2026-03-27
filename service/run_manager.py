@@ -19,10 +19,11 @@ from service.tools import call_tool
 
 TRACE = [
     "intake_parser",
+    "triage_engine",
     "diagnosis_engine",
     "icd_mapper",
     "critic",
-    "policy",
+    "governance_policy",
 ]
 
 

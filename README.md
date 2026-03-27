@@ -1,248 +1,398 @@
-# Med Scribe — Governed AI Decision System
-
-## What This Project Is
-
-This project began as a governed AI reasoning pipeline.
-
-It has been extended into a **production-adjacent system** with:
-
-- API-based execution
-- persistent run storage
-- artifact retrieval (run inspection, no re-execution)
-- latency tracking and execution tracing
-- run comparison (decision + score diffs)
-- vector-based retrieval over past runs (FAISS)
-- structured tool-calling layer over pipeline stages
-
-The focus is not just generating outputs, but demonstrating how AI systems can be:
-
-**controlled, observable, and analyzable over time**
-
----
-
-A production-adjacent AI system that separates **probabilistic reasoning** from **deterministic decision enforcement**, with persistent evaluation, observability, and comparative analysis.
-
----
+# MedScribe — Stateful AI Execution & Evaluation System
 
 ## Overview
 
-This system implements a structured, multi-stage pipeline for diagnostic reasoning and evaluation, then enforces outcomes through a deterministic policy layer.
+AI systems are increasingly used in workflows where the cost of being wrong is high.
 
-Every run is:
+But most systems still rely on a single model response.
+That response can change between runs, ignore constraints, or produce outputs that look correct but aren't.
 
-- persisted (append-only)
-- inspectable (full artifact retrieval)
-- observable (latency + execution trace)
-- comparable (run-to-run diffing)
+This creates a gap between what AI can generate and what a system can reliably act on.
 
----
+## Problem
 
-## System Capabilities
+In high-stakes environments, it's not enough for AI to be helpful — it needs to be consistent and controllable.
 
-The system now operates as a stateful service with:
+Common failure modes:
 
-### Execution
-- API-driven evaluation (`POST /evaluate`)
+- outputs vary for the same input
+- constraints are applied inconsistently
+- there's no clear record of how a result was produced
+- it's difficult to compare behavior across runs
 
-### Persistence
-- append-only run storage (`data/runs.jsonl`)
+These aren't model problems alone. They're system design problems.
 
-### Replay
-- retrieval-based run inspection (`GET /run/{run_id}`)
+## Approach
 
-### Observability
-- stage-level latency tracking
-- execution trace per run
+MedScribe explores how to address this by introducing structure around the model.
 
-### Analysis
-- run comparison (`GET /compare`)
+The system simulates a clinical-style workflow to make decision quality and failure modes easier to evaluate.
 
-### Retrieval
-- FAISS-based similarity search over prior runs (`POST /search`)
+Instead of relying on a single response, the input moves through a defined pipeline:
 
-### Tooling
-- structured tool abstraction over pipeline stages
+- intake and parsing
+- triage and diagnosis
+- structured mapping
+- scoring and evaluation
+- final outcome enforcement
 
----
+The model is used within the pipeline, not as the final authority.
 
-## Core Architecture
+## What This Enables
 
-Input  
-→ Intake Parser  
-→ Diagnosis Engine (LLM)  
-→ ICD Mapping  
-→ Critic (Scoring)  
-→ Policy (Deterministic Decision)  
-→ Persisted Run Artifact  
-→ API Layer (Evaluate / Replay / Compare)
+Adding structure changes how the system behaves:
 
----
+- outputs are consistent across repeated runs
+- invalid results are filtered before they surface
+- each run produces a complete, inspectable record
+- system behavior can be compared across cases and over time
 
-## Key Capabilities
+This makes it possible to evaluate the system itself, not just individual outputs.
 
-### Deterministic Decision Layer
-- PASS / REVISE / FAIL enforcement  
-- removes ambiguity from LLM outputs  
+## Scope
 
-### Persistent Run Storage
-- append-only JSONL (`data/runs.jsonl`)  
-- full historical trace of decisions  
+This project is not intended to be a clinical product.
 
-### Artifact Replay (Retrieval-Based)
-- GET /run/{run_id}  
-- no recomputation, no model invocation  
+The clinical setting is used to represent a high-stakes environment where incorrect outputs are easy to recognize.
 
-### Observability
-- stage-level latency tracking  
-- execution trace per run  
+The focus is on system design:
+how to control, inspect, and evaluate AI behavior in a structured way.
 
-### Run Comparison
-- GET /compare  
-- decision + score-level diffs  
+The sections below describe how the system is implemented.
 
-### Vector Retrieval
-- similarity search over past runs (FAISS-based)  
-- enables retrieval of semantically similar cases  
+## Summary
 
-### Tool Calling
-- structured tool abstraction over pipeline stages  
-- dispatcher-based execution model  
+MedScribe is a stateful, API-driven AI system that executes, persists, and analyzes structured runs with full lifecycle visibility. It executes requests asynchronously, records lifecycle state and execution artifacts, and exposes stored runs for inspection, comparison, and retrieval. The repository also includes an offline evaluation pipeline that produces scored run artifacts and a read-only aggregation utility for persisted evaluation runs.
 
----
+Each run is treated as a persistent artifact, enabling inspection, comparison, and retrieval without re-execution.
+
+## What This System Does
+
+Pipeline:
+
+Input → Intake Parser → Triage Engine → Diagnosis Engine → ICD Mapping → Critic → Governance Policy → Persisted Run
+
+Implemented outputs:
+
+- structured intake data
+- triage decision
+- diagnosis list
+- ICD mappings
+- critic scores and recommendation
+- governance-enforced final status
+- persisted run artifact
+
+## Example Run
+
+Below is a simplified example of a completed run artifact:
+
+```json
+{
+  "run_id": "example-run",
+  "status": "completed",
+  "input": "Patient reports fever and sore throat.",
+  "diagnosis": {
+    "diagnoses": ["Pharyngitis"],
+    "triage": {
+      "level": "home_care",
+      "rationale": "Symptoms fit a simple upper-respiratory pattern."
+    }
+  },
+  "icd_mapping": {
+    "mappings": [
+      {
+        "label": "Pharyngitis",
+        "icd_code": "J02.9",
+        "icd_label": "Acute pharyngitis, unspecified",
+        "status": "OK"
+      }
+    ]
+  },
+  "scores": {
+    "diagnosis_consistency_score": 1.0,
+    "symptom_alignment_score": 1.0,
+    "icd_specificity_score": 1.0,
+    "recommended_status": "pass",
+    "confidence": 1.0
+  },
+  "decision": "PASS",
+  "timing": {
+    "total_ms": 1280
+  }
+}
+```
+
+Actual run artifacts include additional fields such as execution traces, fallback diagnostics, and error metadata.
+
+## Core System Properties
+
+- Stateful execution with lifecycle states: `pending`, `running`, `completed`, `degraded`, `failed`
+- Deterministic enforcement in the governance policy layer
+- Persistent append-only run storage in `data/runs.jsonl`
+- Retrieval of stored runs without recomputation through `GET /run/{run_id}`
+- Run comparison through `GET /compare`
+- Search over persisted runs through `POST /search`
+
+## Evaluation & Analysis
+
+- Offline batch execution from `evaluation/dataset.json` through `evaluation/eval_runner.py`
+- Scoring of batch results through `evaluation/score_runner.py`
+- Persisted evaluation run artifacts in `runs/{run_id}/scored_results.json`
+- Read-only aggregation for persisted evaluation runs through `service/run_aggregator.py`
+- CLI inspection of aggregated evaluation summaries through `scripts/test_run_aggregator.py`
+
+## Observability
+
+- Execution trace recorded per service run
+- Stage-level latency tracking for parse, diagnosis, mapping, scoring, and total runtime
+- Node-level fallback diagnostics for hybrid execution mode
+- Stored failure metadata including `failed_stage` and `error`
 
 ## API
 
-### POST /evaluate
-Input:
-{
-  "input_text": "..."
-}
+### `POST /evaluate`
 
-Returns:
+Request:
+
+```json
 {
-  "run_id": "...",
+  "input_text": "I have had fever, cough, and sore throat for two days."
+}
+```
+
+Response:
+
+```json
+{
+  "run_id": "uuid",
   "status": "pending"
 }
+```
 
----
+Behavior:
 
-### GET /run/{run_id}
-Returns full stored artifact.
+- creates a pending run record
+- starts asynchronous execution
 
-Run artifacts now carry job lifecycle state:
+### `GET /run/{run_id}`
+
+Returns the stored run artifact for the requested run ID.
+
+Example fields in the response:
+
+```json
+{
+  "run_id": "uuid",
+  "timestamp": "2026-03-27T00:00:00Z",
+  "input": "I have fever and cough.",
+  "status": "completed",
+  "parsed_input": {},
+  "diagnosis": {
+    "diagnoses": [],
+    "triage": {}
+  },
+  "icd_mapping": {
+    "mappings": []
+  },
+  "scores": {},
+  "decision": "PASS",
+  "summary": {},
+  "timing": {},
+  "trace": [],
+  "node_diagnostics": [],
+  "fallback_nodes": [],
+  "fallback_reasons": {},
+  "metadata": {},
+  "retry_count": 0,
+  "failed_stage": null,
+  "fallback_used": false,
+  "degraded_mode": false,
+  "error": null
+}
+```
+
+Run lifecycle states:
+
 - `pending`
 - `running`
 - `completed`
-- `degraded` when hybrid execution fell back on one or more nodes
-- `failed` when execution stops mid-pipeline
+- `degraded`
+- `failed`
 
----
+### `GET /run/{run_id}/status`
 
-### GET /runs
-Lists previous runs.
+Response:
 
----
+```json
+{
+  "run_id": "uuid",
+  "status": "completed"
+}
+```
 
-### GET /compare
-Compare two runs by ID.
+### `GET /runs`
 
----
+Returns a list of stored runs with summary fields:
 
-### POST /search
-Vector similarity search over stored runs.
+```json
+[
+  {
+    "run_id": "uuid",
+    "timestamp": "2026-03-27T00:00:00Z",
+    "status": "completed"
+  }
+]
+```
+
+### `GET /compare`
+
+Query parameters:
+
+- `run_id_1`
+- `run_id_2`
+
+Response:
+
+```json
+{
+  "run_id_1": "run-a",
+  "run_id_2": "run-b",
+  "decision_diff": true,
+  "score_diff": {
+    "confidence": {
+      "run_1": 0.85,
+      "run_2": 0.62
+    }
+  }
+}
+```
+
+### `POST /search`
 
 Request:
+
+```json
 {
-  "query": "...",
+  "query": "fever cough",
   "top_k": 5
 }
+```
 
----
+Response:
 
-### POST /tool
-Execute a specific pipeline stage via tool dispatcher.
+```json
+{
+  "results": [
+    {
+      "run_id": "uuid",
+      "score": 0.91
+    }
+  ]
+}
+```
+
+### `POST /tool`
 
 Request:
-{
-  "tool_name": "...",
-  "payload": {...}
-}
 
----
+```json
+{
+  "tool_name": "parse_input",
+  "payload": {
+    "raw_input": "I have a headache."
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "result": {}
+}
+```
+
+Supported tool names:
+
+- `parse_input`
+- `generate_diagnosis`
+- `map_icd`
+- `score_case`
+
+## Architecture
+
+Primary service boundary:
+
+- FastAPI entry point in `service/main.py`
+- Route layer in `service/api.py`
+- Execution orchestration in `service/run_manager.py`
+- Append-only storage in `service/storage.py`
+- Retrieval search in `service/retrieval.py`
+- Node dispatch utilities in `service/tools.py`
+
+Pipeline implementation:
+
+- state initialization in `graph/state.py`
+- graph definition in `graph/graph_builder.py`
+- intake parsing in `graph/nodes/intake_parser.py`
+- triage assignment in `graph/nodes/triage_engine.py`
+- diagnosis generation in `graph/nodes/diagnosis_engine.py`
+- ICD mapping in `graph/nodes/icd_mapper.py`
+- critic scoring in `graph/nodes/critic.py`
+- governance enforcement in `graph/nodes/governance_policy.py`
+
+Evaluation boundary:
+
+- batch execution in `evaluation/eval_runner.py`
+- scored result generation and run artifact persistence in `evaluation/score_runner.py`
+- evaluation run aggregation in `service/run_aggregator.py`
+
+Artifact models:
+
+- service runtime artifacts: `data/runs.jsonl`
+- evaluation run artifacts: `runs/{run_id}/scored_results.json`
 
 ## Tech Stack
 
-- Python  
-- FastAPI (service layer)  
-- FAISS (vector similarity search)  
-- LangChain (LLM orchestration within structured pipeline)  
-- JSONL (append-only storage)
-
----
+- Python
+- FastAPI
+- Pydantic
+- LangGraph
+- LangChain OpenAI
+- FAISS
+- NumPy
+- python-dotenv
+- JSON / JSONL file storage
 
 ## Running the System
 
-pip install -r requirements.txt  
-uvicorn service.main:app --reload  
-
-To run the API service:
-
+```bash
+pip install -r requirements.txt
 uvicorn service.main:app --reload
+```
 
-Docs: http://localhost:8000/docs
+Optional local verification:
 
-## Local Run Verification
+```bash
+curl http://127.0.0.1:8000/
+curl http://127.0.0.1:8000/openapi.json
+curl -X POST http://127.0.0.1:8000/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"input_text":"I have had fever, cough, and sore throat for two days."}'
+```
 
-Install dependencies:
+Offline evaluation flow:
 
-`.venv/bin/pip install -r requirements.txt`
-
-Start the service:
-
-`.venv/bin/python -m uvicorn service.main:app --host 127.0.0.1 --port 8000 --reload`
-
-Verify root:
-
-`curl http://127.0.0.1:8000/`
-
-Verify OpenAPI:
-
-`curl http://127.0.0.1:8000/openapi.json`
-
-Submit an evaluation:
-
-`curl -X POST http://127.0.0.1:8000/evaluate -H "Content-Type: application/json" -d '{"input_text":"I have had fever, cough, and sore throat for two days."}'`
-
-Run one-shot lifecycle validation:
-
-`./.venv/bin/python -m pytest tests/test_run_lifecycle.py -q`
-
-Degraded semantics:
-
-- `status=degraded`, `fallback_used=true`, and `degraded_mode=true` mean hybrid mode was active and at least one node fell back to deterministic behavior.
-- Stored artifacts include `node_diagnostics`, `fallback_nodes`, `fallback_reasons`, `metadata.execution_mode`, and `metadata.hybrid_attempted`.
-
-Failed-run semantics:
-
-- `status=failed` preserves the partial artifact reached before the exception.
-- `failed_stage` and `error` identify where execution stopped.
-
----
+```bash
+python evaluation/eval_runner.py
+python evaluation/score_runner.py
+python scripts/test_run_aggregator.py --run_id <RUN_ID>
+```
 
 ## Design Principles
 
-- separation of reasoning and decision enforcement  
-- append-only state for auditability  
-- minimal, explicit system boundaries  
-- observability by default  
-
----
-
-## Positioning
-
-This project demonstrates:
-
-- applied AI system design  
-- evaluation and governance patterns  
-- operational thinking (state, latency, traceability)  
-- building production-adjacent systems without overengineering  
+- stateful execution with explicit lifecycle tracking
+- append-only storage for persisted service runs
+- inspectable stored artifacts
+- explicit boundaries between service runtime and offline evaluation
+- deterministic policy enforcement after critic scoring

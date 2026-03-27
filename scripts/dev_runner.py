@@ -1,4 +1,7 @@
-"""Local deterministic demo runner for the MED-SCRIBE graph."""
+"""# DEV ONLY - not part of primary execution path.
+
+Local deterministic demo runner for the MED-SCRIBE graph.
+"""
 
 from __future__ import annotations
 

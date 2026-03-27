@@ -1,8 +1,38 @@
+"""Scores raw evaluation results and persists run artifacts.
+
+Flow:
+raw_results.json -> scored_results.json -> runs/{run_id}/
+"""
+
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 INPUT_PATH = Path("evaluation/raw_results.json")
 OUTPUT_PATH = Path("evaluation/scored_results.json")
+RUNS_ROOT = Path("runs")
+
+
+def generate_run_id():
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z").replace(":", "-")
+
+
+def persist_run_results(run_id: str, scored_results: dict):
+    run_dir = RUNS_ROOT / run_id
+    candidate_run_id = run_id
+    version = 1
+
+    while run_dir.exists():
+        version += 1
+        candidate_run_id = f"{run_id}_v{version}"
+        run_dir = RUNS_ROOT / candidate_run_id
+
+    run_dir.mkdir(parents=True, exist_ok=False)
+
+    with (run_dir / "scored_results.json").open("w", encoding="utf-8") as f:
+        json.dump(scored_results, f, indent=2)
+
+    return candidate_run_id
 
 
 def compute_total_score(scores):
@@ -73,8 +103,17 @@ def main():
             "critic_scores": scores
         })
 
+    scored_results = {"results": scored}
+
     with open(OUTPUT_PATH, "w") as f:
-        json.dump({"results": scored}, f, indent=2)
+        json.dump(scored_results, f, indent=2)
+
+    try:
+        run_id = generate_run_id()
+        persisted_run_id = persist_run_results(run_id, scored_results)
+        print(f"[RUN SAVED] run_id={persisted_run_id}")
+    except Exception as exc:
+        print(f"WARNING: failed to persist scored results: {exc}")
 
 
 if __name__ == "__main__":
