@@ -1,0 +1,22 @@
+{
+  "case_id": "V1",
+  "scenario_type": "valid",
+  "expected_behavior": "PASS",
+  "actual_final_status": "PASS",
+  "computed_final_status": "PASS",
+  "total_score": 7.0,
+  "critic_scores": {
+    "diagnosis_consistency_score": 1.0,
+    "symptom_alignment_score": 1.0,
+    "icd_specificity_score": 1.0,
+    "recommended_status": "pass",
+    "confidence": 1.0,
+    "reason_codes": [
+      "CRITIC_REVIEW_CLEAR"
+    ],
+    "summary": "Critic evidence supports pass.",
+    "completeness_score": 1.0,
+    "specificity_score": 1.0,
+    "coherence_score": 1.0
+  }
+}

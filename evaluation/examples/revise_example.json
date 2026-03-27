@@ -1,0 +1,23 @@
+{
+  "case_id": "A1",
+  "scenario_type": "ambiguous",
+  "expected_behavior": "REVISE",
+  "actual_final_status": "REVISE",
+  "computed_final_status": "REVISE",
+  "total_score": 6.02,
+  "critic_scores": {
+    "diagnosis_consistency_score": 0.7,
+    "symptom_alignment_score": 0.7,
+    "icd_specificity_score": 1.0,
+    "recommended_status": "revise",
+    "confidence": 0.62,
+    "reason_codes": [
+      "AMBIGUOUS_SYMPTOM_PATTERN",
+      "AMBIGUITY_STRUCTURED_HANDLING"
+    ],
+    "summary": "Critic evidence suggests revision.",
+    "completeness_score": 1.0,
+    "specificity_score": 1.0,
+    "coherence_score": 1.0
+  }
+}

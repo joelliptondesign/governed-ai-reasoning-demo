@@ -1,0 +1,24 @@
+{
+  "case_id": "I5",
+  "scenario_type": "invalid",
+  "expected_behavior": "FAIL",
+  "actual_final_status": "FAIL",
+  "computed_final_status": "FAIL",
+  "total_score": 1.8,
+  "critic_scores": {
+    "diagnosis_consistency_score": 0.45,
+    "symptom_alignment_score": 0.45,
+    "icd_specificity_score": 0.0,
+    "recommended_status": "fail",
+    "confidence": 0.3,
+    "reason_codes": [
+      "LOW_EVIDENCE_PRESENTATION",
+      "GENERIC_DIAGNOSIS",
+      "ICD_MAPPING_MISSING"
+    ],
+    "summary": "Critic evidence indicates failure.",
+    "completeness_score": 0.6,
+    "specificity_score": 0.0,
+    "coherence_score": 0.0
+  }
+}
